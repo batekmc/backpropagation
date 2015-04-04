@@ -77,9 +77,7 @@ public class FileParser {
 		return testovaci;
 	}
 
-	public File getF() {
-		return f;
-	}
+
 
 	/**
 	 * Naparsuje vstupni soubor podle daneho formatu.
@@ -241,7 +239,7 @@ public class FileParser {
 
 			}// while
 			prevedDo1();
-			printTestArr(this.trenovaci);
+			//printTestArr(this.trenovaci);
 
 			bfrd.close();
 		

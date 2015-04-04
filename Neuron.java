@@ -34,17 +34,7 @@ public class Neuron {
 	
 	
 	/**
-	 * 
-	 * @param W - outputs of lower layer neurons
-	 * @param learningK - learning coefficient. Usually in interval (0,1>
-	 */
-	public void setdW(double W[], double learningK) {
-		for(int i = 0 ; i < W.length ; i ++)
-			this.dW[i] = learningK * W[i] * delta;
-		this.dW[dW.length - 1] = learningK * delta;
-	}
-	/**
-	 * Create neuron
+	 * Create neuron with randomly initialized weights
 	 * 
 	 * @param numOfWeights - how many connection neuron have from lower layer
 	 * @param output - true, if neuron is in output layer, else set to false
@@ -56,6 +46,17 @@ public class Neuron {
 		weights = new double[numOfWeights + 1];
 		dW = new double[numOfWeights + 1];
 		initWeights();
+	}
+	
+	/**
+	 * 
+	 * @param W - outputs of lower layer neurons
+	 * @param learningK - learning coefficient. Usually in interval (0,1>
+	 */
+	public void setdW(double W[], double learningK) {
+		for(int i = 0 ; i < W.length ; i ++)
+			this.dW[i] = learningK * W[i] * delta;
+		this.dW[dW.length - 1] = learningK * delta;
 	}
 
 	/**
@@ -102,7 +103,7 @@ public class Neuron {
 			sum += weights[i] * vstupy[i];
 		//bias
 		sum += weights[weights.length - 1];
-		output = 1 / (1 + Math.exp(-lambda * sum));
+		output = 1 / (1 + Math.exp(lambda * sum));
 
 	}
 	
