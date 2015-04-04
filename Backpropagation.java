@@ -11,13 +11,16 @@ public class Backpropagation {
 	// TODO - specify later
 	private double neco;
 
+	
+	//TODO
 	private double testSet[];
-	private double testCount;
+	private int testCount;
 	private double trainSet[];
-	private double trainCount;
+	private int trainCount;
 
 	public Backpropagation() {
-
+		FileParser f = new FileParser("/home/batek/Stažené/lekar.txt", null);
+		initFromNetworkData(f);
 		runBackPropagation();
 	}
 
@@ -156,7 +159,7 @@ public class Backpropagation {
 					// get sum of delta*w from neurons of higher layer
 					for (int a = 0; a < layers[j + 1]; a++)
 						tmpSum += neurons[index2 + a].getDelta()
-								* neurons[index2 + a].getWeights()[i];
+								* neurons[index2 + a].getWeights()[a];
 					delta = neco * tmp * (1 - tmp) * (tmpSum);
 					neurons[index + i].setDelta(delta);
 
@@ -208,31 +211,26 @@ public class Backpropagation {
 		System.out.println(ar);
 	}
 
-	private void initFromFile() {
-		FileParser f = new FileParser("/home/batek/Stažené/lekar.txt", null);
+	private void initFromNetworkData(NetworkData f) {
 
-		// init layers where 1st layer in input, last output
-		int a = f.getPocetVstupu();
-		numOfInputs = a;
-		int b[] = f.getPocetVeVrstvach();
-		layers = new int[b.length];
-		System.arraycopy(b, 0, layers, 0, b.length);
+		numOfInputs= f.getNumOfInputs();
 
-		this.learningC = f.getKoefUceni();
+		layers = f.getLayers();
 
-		testSet = f.getTestovaci();
-		testCount = f.getPocetTestovacich();
+		learningC = f.getLearningC();
 
-		trainSet = f.getTrenovaci();
-		trainCount = f.getPocetPrvkuTrenovaci();
+		testSet = f.getTestSet();
+		testCount = f.getTestCount();
 
-		//neco = f.getKoefZpredchoziho();
-		neco = 1.0;
+		trainSet = f.getTrainSet();
+		trainCount = f.getTrainCount();
+
+		neco = f.getFromLastC();
+		//neco = 1.0;
 
 	}
 
 	private void createNeurons() {
-		this.initFromFile();
 		this.numOfNeurons = setNumOfNeurons();
 		neurons = new Neuron[numOfNeurons];
 		int index = 0;

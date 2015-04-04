@@ -3,82 +3,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Arrays;
 
-public class FileParser {
-
-	private int pocetVrstev;
-	private int pocetVstupu;
-	private double koefUceni;
-	private double koefZpredchoziho;
+public class FileParser extends NetworkData {
+	
 	private double popisVstupu[];
-	/*
-	 * posledni je vystupni vrstva
-	 */
-	private int pocetVeVrstvach[];
 	private String popisVystupu[];
 
-	/*
-	 * Trenovaci
-	 */
-	private int pocetPrvkuTrenovaci;
-	private double trenovaci[];
-
-	/*
-	 * Testovaci
-	 */
-	private int pocetTestovacich;
-	private double testovaci[];
 
 	private File f;
 	
-	/*
-	 * GETTRY
-	 */	
-	public int getPocetVrstev() {
-		return pocetVrstev;
-	}
-
-	public int getPocetVstupu() {
-		return pocetVstupu;
-	}
-
-	public double getKoefUceni() {
-		return koefUceni;
-	}
-
-	public double getKoefZpredchoziho() {
-		return koefZpredchoziho;
-	}
-
-	public double[] getPopisVstupu() {
-		return popisVstupu;
-	}
-
-	public int[] getPocetVeVrstvach() {
-		return pocetVeVrstvach;
-	}
-
-	public String[] getPopisVystupu() {
-		return popisVystupu;
-	}
-
-	public int getPocetPrvkuTrenovaci() {
-		return pocetPrvkuTrenovaci;
-	}
-
-	public double[] getTrenovaci() {
-		return trenovaci;
-	}
-
-	public int getPocetTestovacich() {
-		return pocetTestovacich;
-	}
-
-	public double[] getTestovaci() {
-		return testovaci;
-	}
-
-
-
 	/**
 	 * Naparsuje vstupni soubor podle daneho formatu.
 	 * Jeden z parametru musi byt null, jinak se pouzije ten druhy tj, File objekt
@@ -112,7 +44,8 @@ public class FileParser {
 	 *            - soubor ve sprvnem formatu:)
 	 */
 	private void readFile(File file) {
-
+		int vrstev = 0;
+		
 		try {
 			BufferedReader bfrd = new BufferedReader(new FileReader(file));
 			String tmp;
@@ -126,16 +59,16 @@ public class FileParser {
 
 				// pocet vrstev
 				if (count1 == 0) {
-					pocetVrstev = Integer.parseInt(tmp);
-					pocetVeVrstvach = new int[pocetVrstev];
+					vrstev = Integer.parseInt(tmp);
+					this.layers = new int[vrstev];
 					count1++;
 					continue;
 				}
 
 				// pocet vstupu
 				if (count1 == 1) {
-					pocetVstupu = Integer.parseInt(tmp);
-					popisVstupu = new double[pocetVstupu * 2];
+					numOfInputs = Integer.parseInt(tmp);
+					popisVstupu = new double[numOfInputs * 2];
 					count1++;
 					continue;
 				}
@@ -146,7 +79,7 @@ public class FileParser {
 					popisVstupu[count2 * 2] = Double.parseDouble(spl[1]);
 					popisVstupu[count2 * 2 + 1] = Double.parseDouble(spl[2]);
 					count2++;
-					if (count2 == pocetVstupu) {
+					if (count2 == numOfInputs) {
 						count2 = 0;
 						count1++;
 					}
@@ -156,10 +89,10 @@ public class FileParser {
 				// pocet neuronu ve vrstvach
 				if (count1 == 3) {
 					spl = tmp.split("\\s+");
-					for (int i = 0; i < pocetVrstev; i++)
-						pocetVeVrstvach[i] = Integer.parseInt(spl[i]);
+					for (int i = 0; i < vrstev; i++)
+						layers[i] = Integer.parseInt(spl[i]);
 					count1++;
-					popisVystupu = new String[pocetVeVrstvach[pocetVeVrstvach.length - 1]];
+					popisVystupu = new String[layers[layers.length - 1]];
 					continue;
 
 				}
@@ -168,7 +101,7 @@ public class FileParser {
 				if (count1 == 4) {
 					popisVystupu[count2] = tmp;
 					count2++;
-					if (count2 == pocetVeVrstvach[pocetVeVrstvach.length - 1]) {
+					if (count2 == layers[layers.length - 1]) {
 						count1++;
 						count2 = 0;
 
@@ -179,37 +112,37 @@ public class FileParser {
 
 				// koeficient uceni
 				if (count1 == 5) {
-					koefUceni = Double.parseDouble(tmp);
+					learningC = Double.parseDouble(tmp);
 					count1++;
 					continue;
 				}
 
 				// koeficient uceni
 				if (count1 == 6) {
-					koefZpredchoziho = Double.parseDouble(tmp);
+					fromLastC = Double.parseDouble(tmp);
 					count1++;
 					continue;
 				}
 
 				if (count1 == 7) {
-					pocetPrvkuTrenovaci = Integer.parseInt(tmp);
-					trenovaci = new double[pocetPrvkuTrenovaci
-							* (pocetVstupu + pocetVeVrstvach[pocetVeVrstvach.length - 1])];
+					trainCount = Integer.parseInt(tmp);
+					trainSet = new double[trainCount
+							* (numOfInputs + layers[layers.length - 1])];
 					count1++;
 					continue;
 				}
 
 				if (count1 == 8) {
 					spl = tmp.split("\\s+");
-					for (int i = 0; i < pocetVstupu
-							+ pocetVeVrstvach[pocetVeVrstvach.length - 1]; i++) {
-						trenovaci[i
+					for (int i = 0; i < numOfInputs
+							+ layers[layers.length - 1]; i++) {
+						trainSet[i
 								+ count2
-								* (pocetVstupu + pocetVeVrstvach[pocetVeVrstvach.length - 1])] = Double
+								* (numOfInputs + layers[layers.length - 1])] = Double
 								.parseDouble(spl[i]);
 					}
 					count2++;
-					if (count2 == pocetPrvkuTrenovaci) {
+					if (count2 == trainCount) {
 						count2 = 0;
 						count1++;
 						continue;
@@ -218,20 +151,20 @@ public class FileParser {
 				}
 
 				if (count1 == 9) {
-					pocetTestovacich = Integer.parseInt(tmp);
-					testovaci = new double[pocetTestovacich * pocetVstupu];
+					testCount = Integer.parseInt(tmp);
+					testSet = new double[testCount * numOfInputs];
 					count1++;
 					continue;
 				}
 
 				if (count1 == 10) {
 					spl = tmp.split("\\s+");
-					for (int i = 0; i < pocetVstupu; i++) {
-						testovaci[i + count2 * pocetVstupu] = Double
+					for (int i = 0; i < numOfInputs; i++) {
+						testSet[i + count2 * numOfInputs] = Double
 								.parseDouble(spl[i]);
 					}
 					count2++;
-					if (count2 == pocetTestovacich) {
+					if (count2 == testCount) {
 						break;
 					}
 
@@ -263,11 +196,11 @@ public class FileParser {
 
 		// Prevod trenovacich dat na interval <0 - 1>
 		int cc = 0;
-		for (int i = 0; i < this.trenovaci.length; i += (pocetVstupu + pocetVeVrstvach[pocetVeVrstvach.length - 1])) {
+		for (int i = 0; i < this.trainSet.length; i += (numOfInputs + layers[layers.length - 1])) {
 			cc = 0;
-			for (int j = 0; j < pocetVstupu; j++) {
-				this.trenovaci[i + j] -= popisVstupu[cc];
-				this.trenovaci[i + j] /= Math.abs(popisVstupu[cc]
+			for (int j = 0; j < numOfInputs; j++) {
+				this.trainSet[i + j] -= popisVstupu[cc];
+				this.trainSet[i + j] /= Math.abs(popisVstupu[cc]
 						- popisVstupu[cc + 1]);
 				cc += 2;
 			}
@@ -275,11 +208,11 @@ public class FileParser {
 		}// for
 
 		// Prevod testovacich na interval <0 - 1>
-		for (int i = 0; i < this.testovaci.length; i += pocetVstupu) {
+		for (int i = 0; i < this.testSet.length; i += numOfInputs) {
 			cc = 0;
-			for (int j = 0; j < pocetVstupu; j++) {
-				this.testovaci[i + j] -= popisVstupu[cc];
-				this.testovaci[i + j] /= Math.abs(popisVstupu[cc]
+			for (int j = 0; j < numOfInputs; j++) {
+				this.testSet[i + j] -= popisVstupu[cc];
+				this.testSet[i + j] /= Math.abs(popisVstupu[cc]
 						+ popisVstupu[cc + 1]);
 				cc += 2;
 
