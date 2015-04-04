@@ -8,10 +8,18 @@ public class Neuron {
 	private static double lambda = 1.0d;
 
 	private double output;
+	private double delta;
+	private double dW[];
+	
 
-	
-	
-	
+	public double getDelta() {
+		return delta;
+	}
+
+	public void setDelta(double delta) {
+		this.delta = delta;
+	}
+
 	public double[] getWeights() {
 		return weights;
 	}
@@ -23,7 +31,18 @@ public class Neuron {
 	public double getOutput() {
 		return output;
 	}
-
+	
+	
+	/**
+	 * 
+	 * @param W - outputs of lower layer neurons
+	 * @param learningK - learning coefficient. Usually in interval (0,1>
+	 */
+	public void setdW(double W[], double learningK) {
+		for(int i = 0 ; i < W.length ; i ++)
+			this.dW[i] = learningK * W[i] * delta;
+		this.dW[dW.length - 1] = learningK * delta;
+	}
 	/**
 	 * Create neuron
 	 * 
@@ -33,7 +52,9 @@ public class Neuron {
 	public Neuron(int numOfWeights, boolean output) {
 		this.outputLayer = output;
 
-		weights = new double[numOfWeights];
+		//need +1 array because of bias
+		weights = new double[numOfWeights + 1];
+		dW = new double[numOfWeights + 1];
 		initWeights();
 	}
 
@@ -59,8 +80,10 @@ public class Neuron {
 	 */
 	public void outputExcitation(double input[]) {
 		double sum = 0;
-		for (int i = 0; i < weights.length; i++)
+		for (int i = 0; i < weights.length - 1; i++)
 			sum += weights[i] * input[i];
+		//bias
+		sum += weights[weights.length - 1];
 		if (sum <= 0)
 			output = 0.0d;
 		output = 1.0d;
@@ -75,10 +98,21 @@ public class Neuron {
 	 */
 	public void midLayerExcitation(double vstupy[]) {
 		double sum = 0;
-		for (int i = 0; i < weights.length; i++)
+		for (int i = 0; i < weights.length - 1; i++)
 			sum += weights[i] * vstupy[i];
+		//bias
+		sum += weights[weights.length - 1];
 		output = 1 / (1 + Math.exp(-lambda * sum));
 
+	}
+	
+	/**
+	 * Update weights to calculated by backpropagation algorithm
+	 *  w + dW
+	 */
+	public void updateWeights(){
+		for( int i = 0 ; i < weights.length ; i ++)
+			weights[i] += dW[i];
 	}
 
 }// class

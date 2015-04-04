@@ -7,6 +7,8 @@ public class Backpropagation {
 	private Neuron neurons[];
 	private int numOfNeurons;
 	private int numOfInputs;
+	private double learningK;
+	private double neco;
 	
 	private double testInput[];
 		
@@ -30,9 +32,13 @@ public class Backpropagation {
 		int b[] = f.getPocetVeVrstvach();
 		layers = new int[b.length];
 		System.arraycopy(b, 0, layers, 0, b.length);
+		
+		this.learningK = f.getKoefUceni();
 		//TODO - parse other arguments
 		
 		testInput = f.getTestovaci();
+		
+		neco = 1.0d;
 		
 	}
 	
@@ -58,10 +64,12 @@ public class Backpropagation {
 		}//for j		
 	}
 	
-	
+
 	/**
-	 *TODO - inicializace prvni vrstvy, samotna excitace
-	 *
+	 * 
+	 * @param input - X parameter given by input layer
+	 * 
+	 * ouptup of eacxh neuron is saved in Neuron.output
 	 */
 	private void excitation( double input[]){
 		
@@ -87,7 +95,74 @@ public class Backpropagation {
 				}
 			}
 			index += layers[j];
-		}
+		}//for
+	}
+	
+	
+	//TODO - backpropagation:)
+	private void learning(double  expectedOutput[], double input[]){
+		
+		int index = this.numOfNeurons - layers[layers.length - 1], index2;
+		double delta;
+		double tmp;
+		double tmpW[];
+		double tmpSum;
+		
+		for( int j = layers.length-1 ; j >= 0 ; j ++){
+			for( int i = 0 ; i < layers[j] ; i++ ){
+				
+				//output layer
+				if( neurons[index + i].isOutputLayer()){
+					
+					tmp = neurons[index + i].getOutput();
+					delta =  neco * tmp * ( 1 - tmp)*( expectedOutput[i] - tmp);
+					neurons[index + i].setDelta(delta);
+					
+					tmpW = new double[neurons[ index + i].getWeights().length - 1];
+					for( int a = neurons[ index + i].getWeights().length - 2 ; a >=0 ; a--)
+						tmpW[a] = neurons[index - a - 1].getOutput();
+					neurons[index + i].setdW(tmpW, learningK);
+				}				
+				//mid layer
+				else {
+					
+					tmp = neurons[index + i].getOutput();
+					tmpSum = 0;
+					index2 = index + layers[j+1];
+					
+					//get sum of delta*w from neurons of higher layer
+					for( int a = 0 ; a < layers[j+1] ; a++)
+						tmpSum += neurons[index2 + a].getDelta() * neurons[index2 + a].getWeights()[i];
+					delta = neco * tmp * (1 - tmp)*(tmpSum);
+					
+					//is is not the last layer?
+					if( j> 0){
+						tmpW = new double[neurons[ index + i].getWeights().length - 1];
+						for( int a = neurons[ index + i].getWeights().length - 2 ; a >=0 ; a--)
+							tmpW[a] = neurons[index - a - 1].getOutput();
+						neurons[index + i].setdW(tmpW, learningK);
+					}
+					
+					//if it is last layer, then calculate dW with input(x1 ... xN)
+					else{
+						neurons[index + i].setdW(input, learningK);
+					}
+					
+				}
+				
+			}//for
+			if(j > 0)
+				index -= layers[j -1];
+		}//for	
+		
+		updateWeights();
+	}
+	
+	private void updateWeights(){
+		
+		for(int i = 0 ; i < neurons.length ; i ++)
+			neurons[i].updateWeights();
+		
 	}
 	
 	private int setNumOfNeurons(){
