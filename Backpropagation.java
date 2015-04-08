@@ -2,6 +2,8 @@ import java.util.Arrays;
 
 public class Backpropagation {
 
+	private final int MAX_ITERATIONS = 200000;
+
 	// Num of neurons in each layer. Highest index is last layer
 	private int layers[];
 	private Neuron neurons[];
@@ -10,9 +12,10 @@ public class Backpropagation {
 	private double learningC;
 	// TODO - specify later
 	private double neco;
+	// network Error
+	private double bpError;
 
-	
-	//TODO
+	// TODO
 	private double testSet[];
 	private int testCount;
 	private double trainSet[];
@@ -32,67 +35,61 @@ public class Backpropagation {
 		double input[] = new double[numOfInputs];
 		double expectedOutput[] = new double[outputsCount];
 
-		int isFinished = 0;
-
 		int debug = 0;
 
-		while (true) {
+		while(debug < MAX_ITERATIONS) {
 
 			for (int i = 0; i < trainCount; i++) {
 
 				System.arraycopy(trainSet, i * (outputsCount + numOfInputs),
 						input, 0, input.length);
 				System.arraycopy(trainSet, i * (outputsCount + numOfInputs)
-						+ numOfInputs, expectedOutput, 0,
-						expectedOutput.length);
+						+ numOfInputs, expectedOutput, 0, expectedOutput.length);
 				excitation(input);
+				learning(expectedOutput, input);
 
-				if (isResponseGood(expectedOutput)) {
-					isFinished++;
-				} else {
-					learning(expectedOutput, input);
-					print("Iterace: " + debug++);
-					printArr(input);
-
-				}
+				setBPError(expectedOutput);
 
 			}// for
-			if (isFinished == trainCount) {
+			
+			bpError *= 0.5d;
+			//TODO - Calculate max acceptable error - something like 10% of sum(sum(ABS(expected - real)))
+			if( bpError <= 0.4d){
 				return;
-			} else {
-				isFinished = 0;
 			}
+			else {
+				System.out.println("Error: " + bpError + ", iterace: " + debug++);
+				bpError = 0;
+			}
+			
 
-		}// while
+		}// loop
 	}
 
 	/**
+	 * calculate error given by expected output of training data and 
+	 * real response form neural network
 	 * 
 	 * @param expectedOut
 	 *            - expected output from training input
 	 * @return true if network response is the same as expected from training
 	 *         data, else false
 	 */
-	private boolean isResponseGood(double expectedOut[]) {
+	private void  setBPError(double expectedOut[]) {
 		int index = numOfNeurons - layers[layers.length - 1];
 		for (int i = 0; i < expectedOut.length; i++) {
-			print(expectedOut[i] + " , " + neurons[index + i].getOutput() );
-			if (expectedOut[i] != neurons[index + i].getOutput()) {
-				return false;
-
-			}
+			bpError += (neurons[index + i].getOutput() - expectedOut[i])
+					* (neurons[index + i].getOutput() - expectedOut[i]);
 		}
-		return true;
 
 	}
-
 
 	/**
 	 * 
 	 * @param input
 	 *            - X parameter given by input layer
 	 * 
-	 *            ouptup of eacxh neuron is saved in Neuron.output
+	 *            output of each neuron is saved in Neuron.output
 	 */
 	private void excitation(double input[]) {
 
@@ -106,14 +103,7 @@ public class Backpropagation {
 						input[k] = neurons[index2 + k].getOutput();
 					index2 += layers[j - 1];
 				}
-				if (j == 0)
-					neurons[index + i].midLayerExcitation(input);
-				else {
-					if (neurons[index + i].isOutputLayer())
-						neurons[index + i].outputExcitation(input);
-					else
-						neurons[index + i].midLayerExcitation(input);
-				}
+				neurons[index + i].midLayerExcitation(input);
 			}
 			index += layers[j];
 		}// for
@@ -124,11 +114,11 @@ public class Backpropagation {
 	 * @param expectedOutput
 	 *            - expected answer to training data
 	 * @param input
-	 *            - input layer data (x1 ... xN)
+	 *            - input layer data (x1 ... xN) from training data
 	 */
 	private void learning(double expectedOutput[], double input[]) {
 
-		int index = this.numOfNeurons - layers[layers.length - 1], index2=0;
+		int index = this.numOfNeurons - layers[layers.length - 1], index2 = 0;
 		double delta;
 		double tmp;
 		double tmpW[];
@@ -141,13 +131,14 @@ public class Backpropagation {
 				if (neurons[index + i].isOutputLayer()) {
 
 					tmp = neurons[index + i].getOutput();
-					delta = neco * tmp * (1 - tmp) * (expectedOutput[i] - tmp);
+					delta = tmp * (1 - tmp) * (expectedOutput[i] - tmp);
 					neurons[index + i].setDelta(delta);
 
-					tmpW = new double[layers[j-1] ];
-					for (int a = 0; a <layers[j -1]; a++)
-						tmpW[a] = neurons[index - layers[j -1] + i ].getOutput();
-					neurons[index + i].setdW(tmpW, learningC);
+					tmpW = new double[layers[j - 1]];
+					for (int a = 0; a < layers[j - 1]; a++)
+						tmpW[a] = neurons[index - layers[j - 1] + i]
+								.getOutput();
+					neurons[index + i].setdW(tmpW);
 				}
 				// mid layer
 				else {
@@ -160,22 +151,23 @@ public class Backpropagation {
 					for (int a = 0; a < layers[j + 1]; a++)
 						tmpSum += neurons[index2 + a].getDelta()
 								* neurons[index2 + a].getWeights()[a];
-					delta = neco * tmp * (1 - tmp) * (tmpSum);
+					delta =  tmp * (1 - tmp) * (tmpSum);
 					neurons[index + i].setDelta(delta);
 
 					// is is not the last layer?
 					if (j > 0) {
 						tmpW = new double[neurons[index + i].getWeights().length - 1];
-						tmpW = new double[layers[j-1] ];
-						for (int a = 0; a <layers[j -1]; a++)
-							tmpW[a] = neurons[index - layers[j -1] + i ].getOutput();
-						neurons[index + i].setdW(tmpW, learningC);
+						tmpW = new double[layers[j - 1]];
+						for (int a = 0; a < layers[j - 1]; a++)
+							tmpW[a] = neurons[index - layers[j - 1] + i]
+									.getOutput();
+						neurons[index + i].setdW(tmpW);
 					}
 
 					// if it is last layer, then calculate dW with input(x1 ...
 					// xN)
 					else {
-						neurons[index + i].setdW(input, learningC);
+						neurons[index + i].setdW(input);
 					}
 
 				}
@@ -183,7 +175,7 @@ public class Backpropagation {
 			}// for
 			if (j > 0)
 				index -= layers[j - 1];
-			
+
 		}// for
 
 		updateWeights();
@@ -202,7 +194,7 @@ public class Backpropagation {
 			sum += layers[i];
 		return sum;
 	}
-	
+
 	private void printArr(double ar[]) {
 		System.out.println(Arrays.toString(ar));
 	}
@@ -213,7 +205,7 @@ public class Backpropagation {
 
 	private void initFromNetworkData(NetworkData f) {
 
-		numOfInputs= f.getNumOfInputs();
+		numOfInputs = f.getNumOfInputs();
 
 		layers = f.getLayers();
 
@@ -226,7 +218,6 @@ public class Backpropagation {
 		trainCount = f.getTrainCount();
 
 		neco = f.getFromLastC();
-		//neco = 1.0;
 
 	}
 
@@ -237,12 +228,12 @@ public class Backpropagation {
 		for (int j = 0; j < layers.length; j++) {
 			for (int i = 0; i < layers[j]; i++) {
 				if (j == (layers.length - 1)) {
-					neurons[index + i] = new Neuron(layers[j - 1], true);
+					neurons[index + i] = new Neuron(layers[j - 1], true, learningC, neco);
 				} else {
 					if (j == 0)
-						neurons[index + i] = new Neuron(numOfInputs, false);
+						neurons[index + i] = new Neuron(numOfInputs, false, learningC, neco);
 					else
-						neurons[index + i] = new Neuron(layers[j - 1], false);
+						neurons[index + i] = new Neuron(layers[j - 1], false, learningC, neco);
 				}
 
 			}// for i

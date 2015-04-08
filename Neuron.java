@@ -10,6 +10,11 @@ public class Neuron {
 	private double output;
 	private double delta;
 	private double dW[];
+	private double oldDW[];
+
+	private double LEARNING_C;
+	private double PREVIOUS_STEP_C;
+	private boolean isFirstWeight = true;
 
 	public double getDelta() {
 		return delta;
@@ -32,19 +37,24 @@ public class Neuron {
 	}
 
 	/**
-	 * Create neuron with randomly initialized weights
 	 * 
 	 * @param numOfWeights
 	 *            - how many connection neuron have from lower layer
 	 * @param output
 	 *            - true, if neuron is in output layer, else set to false
+	 * @param LEARNING_C - leakning coefficient
+	 * @param PREVIOUS_STREP_C - previous step influence coefficient
 	 */
-	public Neuron(int numOfWeights, boolean output) {
+	Neuron(int numOfWeights, boolean output, double LEARNING_C,
+			double PREVIOUS_STREP_C) {
 		this.outputLayer = output;
+		this.LEARNING_C = LEARNING_C;
+		this.PREVIOUS_STEP_C = PREVIOUS_STREP_C;
 
 		// need +1 array because of bias
 		weights = new double[numOfWeights + 1];
 		dW = new double[numOfWeights + 1];
+		oldDW = new double[numOfWeights + 1];
 		initWeights();
 	}
 
@@ -55,10 +65,10 @@ public class Neuron {
 	 * @param learningK
 	 *            - learning coefficient. Usually in interval (0,1>
 	 */
-	public void setdW(double W[], double learningK) {
+	public void setdW(double W[]) {
 		for (int i = 0; i < W.length; i++)
-			this.dW[i] = learningK * W[i] * delta;
-		this.dW[dW.length - 1] = learningK * delta;
+			this.dW[i] = LEARNING_C * W[i] * delta;
+		this.dW[dW.length - 1] = LEARNING_C * delta;
 	}
 
 	/**
@@ -67,36 +77,9 @@ public class Neuron {
 	private void initWeights() {
 		Random r = new Random();
 		for (int i = 0; i < weights.length; i++) {
-			boolean a = r.nextBoolean();
-			if (a)
-				weights[i] = r.nextDouble();
-			else
-				weights[i] = -r.nextDouble();
+			weights[i] = r.nextDouble();
+
 		}
-	}
-
-	/**
-	 * Excitation of output layer neurons
-	 * 
-	 * @param input
-	 *            - neuron inputs, X set output to 1 | 0
-	 */
-	public void outputExcitation(double input[]) {
-		// double sum = 0;
-		// for (int i = 0; i < weights.length - 1; i++)
-		// sum += weights[i] * input[i];
-		// //bias
-		// sum += weights[weights.length - 1];
-		// if (sum <= 0)
-		// output = 0.0d;
-		// output = 1.0d;
-		double sum = 0;
-		for (int i = 0; i < weights.length - 1; i++)
-			sum += weights[i] * input[i];
-		// bias
-		sum += weights[weights.length - 1];
-		output = 1 / (1 + Math.exp(-sum));
-
 	}
 
 	/**
@@ -116,11 +99,21 @@ public class Neuron {
 	}
 
 	/**
-	 * Update weights to calculated by backpropagation algorithm w + dW
+	 * Update weights to calculated by backpropagation algorithm w + dW +
+	 * oldDW*previous_step_influence
 	 */
 	public void updateWeights() {
-		for (int i = 0; i < weights.length; i++)
-			weights[i] += dW[i];
+		if (isFirstWeight) {
+			System.arraycopy(dW, 0, oldDW, 0, dW.length);
+			//oldDW = dW;
+			for (int i = 0; i < weights.length; i++)
+				weights[i] += dW[i];
+		} else {
+			for (int i = 0; i < weights.length; i++)
+				weights[i] += dW[i] + PREVIOUS_STEP_C * oldDW[i];
+			System.arraycopy(dW, 0, oldDW, 0, dW.length);
+			//oldDW = dW;
+		}
 	}
 
 }// class
