@@ -104,6 +104,7 @@ public class Neuron {
 	 */
 	public void updateWeights() {
 		if (isFirstWeight) {
+			isFirstWeight = false;
 			System.arraycopy(dW, 0, oldDW, 0, dW.length);
 			//oldDW = dW;
 			for (int i = 0; i < weights.length; i++)
