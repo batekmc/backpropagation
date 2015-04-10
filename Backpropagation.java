@@ -2,7 +2,7 @@ import java.util.Arrays;
 
 public class Backpropagation {
 
-	private final int MAX_ITERATIONS = 200000;
+	private final int MAX_ITERATIONS = 10000000;
 
 	// Num of neurons in each layer. Highest index is last layer
 	private int layers[];
@@ -37,8 +37,11 @@ public class Backpropagation {
 
 		int debug = 0;
 
-		while(debug < MAX_ITERATIONS) {
+		System.out.println("MAX CHYBA:" + setMinErrorToStopLearning(0.1d)
+				+ " ----------- ");
 
+		while (debug < MAX_ITERATIONS) {
+			// if(debug == 1)break;
 			for (int i = 0; i < trainCount; i++) {
 
 				System.arraycopy(trainSet, i * (outputsCount + numOfInputs),
@@ -51,23 +54,23 @@ public class Backpropagation {
 				setBPError(expectedOutput);
 
 			}// for
-			
+
 			bpError *= 0.5d;
-			//TODO - Calculate max acceptable error - something like 10% of sum(sum(ABS(expected - real)))
-			if( bpError <= 0.4d){
+			// TODO - Calculate max acceptable error - something like 10% of
+			// sum(sum(ABS(expected - real)))
+			if (bpError <= 0.25d) {
 				return;
-			}
-			else {
-				System.out.println("Error: " + bpError + ", iterace: " + debug++);
+			} else {
+				System.out.println("Error: " + bpError + ", iterace: "
+						+ debug++);
 				bpError = 0;
 			}
-			
 
 		}// loop
 	}
 
 	/**
-	 * calculate error given by expected output of training data and 
+	 * calculate error of network given by expected output of training data and
 	 * real response form neural network
 	 * 
 	 * @param expectedOut
@@ -75,13 +78,17 @@ public class Backpropagation {
 	 * @return true if network response is the same as expected from training
 	 *         data, else false
 	 */
-	private void  setBPError(double expectedOut[]) {
+	private void setBPError(double expectedOut[]) {
 		int index = numOfNeurons - layers[layers.length - 1];
 		for (int i = 0; i < expectedOut.length; i++) {
 			bpError += (neurons[index + i].getOutput() - expectedOut[i])
 					* (neurons[index + i].getOutput() - expectedOut[i]);
 		}
 
+	}
+
+	private double setMinErrorToStopLearning(double diff) {
+		return 0.5d * (trainCount * layers[layers.length - 1] * diff * diff);
 	}
 
 	/**
@@ -135,6 +142,7 @@ public class Backpropagation {
 					neurons[index + i].setDelta(delta);
 
 					tmpW = new double[layers[j - 1]];
+					// deltas of lower layer
 					for (int a = 0; a < layers[j - 1]; a++)
 						tmpW[a] = neurons[index - layers[j - 1] + i]
 								.getOutput();
@@ -145,27 +153,24 @@ public class Backpropagation {
 
 					tmp = neurons[index + i].getOutput();
 					tmpSum = 0;
-					index2 = index + layers[j + 1];
+					index2 = index + layers[j];
 
 					// get sum of delta*w from neurons of higher layer
 					for (int a = 0; a < layers[j + 1]; a++)
 						tmpSum += neurons[index2 + a].getDelta()
-								* neurons[index2 + a].getWeights()[a];
-					delta =  tmp * (1 - tmp) * (tmpSum);
+								* neurons[index2 + a].getWeights()[i];
+					delta = tmp * (1 - tmp) * (tmpSum);
 					neurons[index + i].setDelta(delta);
 
 					// is is not the last layer?
 					if (j > 0) {
-						tmpW = new double[neurons[index + i].getWeights().length - 1];
 						tmpW = new double[layers[j - 1]];
 						for (int a = 0; a < layers[j - 1]; a++)
 							tmpW[a] = neurons[index - layers[j - 1] + i]
 									.getOutput();
 						neurons[index + i].setdW(tmpW);
 					}
-
-					// if it is last layer, then calculate dW with input(x1 ...
-					// xN)
+					// in the last layer calculate dW with input (x1 ... xN)
 					else {
 						neurons[index + i].setdW(input);
 					}
@@ -228,12 +233,15 @@ public class Backpropagation {
 		for (int j = 0; j < layers.length; j++) {
 			for (int i = 0; i < layers[j]; i++) {
 				if (j == (layers.length - 1)) {
-					neurons[index + i] = new Neuron(layers[j - 1], true, learningC, neco);
+					neurons[index + i] = new Neuron(layers[j - 1], true,
+							learningC, neco);
 				} else {
 					if (j == 0)
-						neurons[index + i] = new Neuron(numOfInputs, false, learningC, neco);
+						neurons[index + i] = new Neuron(numOfInputs, false,
+								learningC, neco);
 					else
-						neurons[index + i] = new Neuron(layers[j - 1], false, learningC, neco);
+						neurons[index + i] = new Neuron(layers[j - 1], false,
+								learningC, neco);
 				}
 
 			}// for i

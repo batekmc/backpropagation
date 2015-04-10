@@ -62,8 +62,6 @@ public class Neuron {
 	 * 
 	 * @param W
 	 *            - outputs of lower layer neurons
-	 * @param learningK
-	 *            - learning coefficient. Usually in interval (0,1>
 	 */
 	public void setdW(double W[]) {
 		for (int i = 0; i < W.length; i++)
@@ -78,7 +76,6 @@ public class Neuron {
 		Random r = new Random();
 		for (int i = 0; i < weights.length; i++) {
 			weights[i] = r.nextDouble();
-
 		}
 	}
 
@@ -94,27 +91,27 @@ public class Neuron {
 			sum += weights[i] * vstupy[i];
 		// bias
 		sum += weights[weights.length - 1];
-		output = 1 / (1 + Math.exp(-sum));
+		output = ( 1 / (1 + Math.exp(-sum)) );
 
 	}
 
 	/**
 	 * Update weights to calculated by backpropagation algorithm w + dW +
-	 * oldDW*previous_step_influence
+	 * oldDW*previous_step_influence.
+	 * OldW * PRV..is inertia.
 	 */
 	public void updateWeights() {
 		if (isFirstWeight) {
 			isFirstWeight = false;
-			System.arraycopy(dW, 0, oldDW, 0, dW.length);
-			//oldDW = dW;
 			for (int i = 0; i < weights.length; i++)
 				weights[i] += dW[i];
 		} else {
 			for (int i = 0; i < weights.length; i++)
 				weights[i] += dW[i] + PREVIOUS_STEP_C * oldDW[i];
-			System.arraycopy(dW, 0, oldDW, 0, dW.length);
-			//oldDW = dW;
 		}
+		if(PREVIOUS_STEP_C != 0.0d)
+			System.arraycopy(dW, 0, oldDW, 0, dW.length);
+		//oldDW = dW;
 	}
 
 }// class
