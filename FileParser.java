@@ -210,7 +210,7 @@ public class FileParser extends NetworkData {
 			for (int j = 0; j < numOfInputs; j++) {
 				this.testSet[i + j] -= popisVstupu[cc];
 				this.testSet[i + j] /= Math.abs(popisVstupu[cc]
-						+ popisVstupu[cc + 1]);
+						- popisVstupu[cc + 1]);
 				cc += 2;
 
 			}
@@ -224,7 +224,7 @@ public class FileParser extends NetworkData {
 		int cc = 0;
 		for (int j = 0; j < numOfInputs; j++) {
 			input[j] -= popisVstupu[cc];
-			input[j] /= Math.abs(popisVstupu[cc] + popisVstupu[cc + 1]);
+			input[j] /= Math.abs(popisVstupu[cc] - popisVstupu[cc + 1]);
 			cc += 2;
 
 		}
