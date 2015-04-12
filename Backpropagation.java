@@ -2,7 +2,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Arrays;
 
-public class Backpropagation implements Runnable{
+public class Backpropagation implements Runnable {
 
 	private final int MAX_ITERATIONS = 100000000;
 
@@ -23,117 +23,145 @@ public class Backpropagation implements Runnable{
 	private int testCount;
 	private double trainSet[];
 	private int trainCount;
-	
+
 	// for GUI
 	private static volatile boolean stop;
 	private final List<String> queue;
 	private boolean isRunning;
+	private FileParser flp;
+	private boolean usrErr = false;
 
-	
 	/**
 	 * 
-	 * @param file - file in given file format
-	 * @param q - synchronizedList - must be thread safe!
+	 * @param file
+	 *            - file in given file format
+	 * @param q
+	 *            - synchronizedList - must be thread safe!
 	 */
 	public Backpropagation(File file, List<String> q) {
-		FileParser f = new FileParser(null, file);
+		flp = new FileParser(null, file);
 		queue = q;
 		isRunning = false;
-		initFromNetworkData(f);
+		initFromNetworkData(flp);
+
 	}
-	
+
 	/**
 	 * 
 	 * @return true if network is learning
 	 */
-	public boolean isRunning(){
-		return this.isRunning;		
+	public boolean isRunning() {
+		return this.isRunning;
 	}
-	
+
+	/**
+	 * Run backpropagation algorithm with given settings
+	 */
 	@Override
 	public void run() {
 		runBackPropagation();
-		
+
 	}
-	
+
+	public boolean testInput(double[] input) {
+		if (input.length == numOfInputs)
+			return true;
+		return false;
+	}
+
+	public boolean setMaxError(double val) {
+		usrErr = true;
+		if (val > 0.0d && val < setMinErrorToStopLearning(1.0d)) {
+			bpError = val;
+			return true;
+		}
+
+		return false;
+	}
+
 	/**
 	 * 
-	 * @param val learning rate 
+	 * @param val
+	 *            learning rate
 	 * @return true if set
 	 */
-	public boolean setLearningC(double val){
-		if( val > 0.0d  ){
+	public boolean setLearningC(double val) {
+		if (val > 0.0d) {
 			this.learningC = val;
 			return true;
 		}
 		return false;
-		
+
 	}
-	
+
 	/**
 	 * 
-	 * @param val previous step influence
+	 * @param val
+	 *            previous step influence
 	 * @return true if set
 	 */
-	public boolean setPrevStepC(double val){
-		if( val > 0.0d  && val < 1.0d){
+	public boolean setPrevStepC(double val) {
+		if (val > 0.0d && val < 1.0d) {
 			this.prevStepC = val;
 			return true;
 		}
 		return false;
-		
+
 	}
-	
+
 	/**
 	 * stop learning
 	 */
-	public void stopLearning(){
+	public void stopLearning() {
 		this.stop = true;
 	}
-	
-	public String[] testFileData(){
-		String tmp[] = new String[testCount];
+
+	public String[] testFileData() {
+		String tmp[] = new String[testCount * 2];
 		double testInput[] = new double[numOfInputs];
-		int index = 0, index2 = numOfNeurons - layers[layers.length -1];
-		for(int i = 0 ; i < testCount ; i++){
-			for(int j = 0; j < numOfInputs ; j ++)
+		int index = 0, index2 = numOfNeurons - layers[layers.length - 1];
+		double testInput2[] = new double[layers[layers.length - 1]];
+		for (int i = 0; i < testCount; i++) {
+			for (int j = 0; j < numOfInputs; j++)
 				testInput[j] = testSet[index + j];
 			excitation(testInput);
-			for(int a = 0; a < numOfNeurons- index2; a++)
-				testInput[a] = neurons[index2 + a].getOutput();
-			tmp[i] = Arrays.toString(testInput);
-			index+= numOfInputs;
+			for (int a = 0; a < numOfNeurons - index2; a++)
+				testInput2[a] = neurons[index2 + a].getOutput();
+			tmp[i * 2] = "--Input: " + Arrays.toString(testInput) + "\n";
+			tmp[i * 2 + 1] = "++Output: " + Arrays.toString(testInput2) + "\n";
+			index += numOfInputs;
 		}
 		return tmp;
 	}
-	
-	public double[] testData(double input[]){
-		double d[] = new double[layers.length -1];
-		int index = numOfNeurons - layers[layers.length -1];
+
+	public double[] testData(double input[]) {
+		flp.inputsTo1(input);
+		double d[] = new double[layers[layers.length - 1]];
+		int index = numOfNeurons - layers[layers.length - 1];
 		excitation(input);
-		for(int i = 0 ; i < d.length ; i++)
+		for (int i = 0; i < d.length; i++)
 			d[i] = neurons[index + i].getOutput();
 		return d;
-		
+
 	}
-	
+
 	/**
 	 * 
-	 * @param val array of network topology 
+	 * @param val
+	 *            array of network topology
 	 * @return true, if input is used, otherwise flase
 	 */
-	public boolean setLayers( int val[]){
-		
-		if(layers != null && val.length > 1){
-			if(val[val.length-1] == layers[layers.length -1])
-			{
+	public boolean setLayers(int val[]) {
+
+		if (layers != null && val.length > 1) {
+			if (val[val.length - 1] == layers[layers.length - 1]) {
 				this.layers = val;
 				return true;
 			}
 		}
 
 		return false;
-		
+
 	}
 
 	public void runBackPropagation() {
@@ -142,15 +170,15 @@ public class Backpropagation implements Runnable{
 		createNeurons();
 		stop = false;
 		isRunning = true;
-		maxError = setMinErrorToStopLearning(0.2);
+		if (!usrErr)
+			maxError = setMinErrorToStopLearning(0.2);
 		int outputsCount = layers[layers.length - 1];
 		double input[] = new double[numOfInputs];
 		double expectedOutput[] = new double[outputsCount];
 
-		int debug = 0;
+		long  debug = 0;
 
-
-		while (debug < MAX_ITERATIONS) {
+		while (true) {
 			// if(debug == 1)break;
 			for (int i = 0; i < trainCount; i++) {
 
@@ -165,15 +193,17 @@ public class Backpropagation implements Runnable{
 
 			}// for
 			if (bpError <= maxError || stop) {
-				queue.add("Finished! Error: " + bpError + " , iteration : " + debug +"\n");
-				//Tell gui thread that it stopped
+				queue.add("##Finished! Error: " + bpError + " , iteration : "
+						+ debug + "\n");
+				// Tell gui thread that it stopped
 				queue.add("EOF");
 				isRunning = false;
 				return;
 			} else {
-				//GUI
-				if(debug % 100 == 0)
-					queue.add("Error: " + bpError + " , iteration : " + debug+"\n");
+				// GUI
+				if (debug % 100 == 0)
+					queue.add("@Error: " + bpError + " , iteration : " + debug
+							+ "\n");
 				bpError = 0;
 				debug++;
 			}
@@ -200,6 +230,14 @@ public class Backpropagation implements Runnable{
 
 	}
 
+	/**
+	 * set error size, if error of network is smaller than this siz, learning
+	 * will be stopped
+	 * 
+	 * @param diff
+	 *            - error in percents/100 - fxp 0.1 == 10 %
+	 * @return
+	 */
 	private double setMinErrorToStopLearning(double diff) {
 		return 0.5d * (trainCount * layers[layers.length - 1] * diff * diff);
 	}
@@ -361,6 +399,5 @@ public class Backpropagation implements Runnable{
 			index += layers[j];
 		}// for j
 	}
-
 
 }

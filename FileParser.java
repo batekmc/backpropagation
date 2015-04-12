@@ -4,34 +4,34 @@ import java.io.FileReader;
 import java.util.Arrays;
 
 public class FileParser extends NetworkData {
-	
+
 	private double popisVstupu[];
 	private String popisVystupu[];
 
-
 	private File f;
-	
+
 	/**
-	 * Naparsuje vstupni soubor podle daneho formatu.
-	 * Jeden z parametru musi byt null, jinak se pouzije ten druhy tj, File objekt
+	 * Naparsuje vstupni soubor podle daneho formatu. Jeden z parametru musi byt
+	 * null, jinak se pouzije ten druhy tj, File objekt
 	 * 
-	 * @param path - cesta k souboru
-	 * @param ff - File type object of file, you want to open
-	 * @throws NullPointerException - if not given valid input
+	 * @param path
+	 *            - cesta k souboru
+	 * @param ff
+	 *            - File type object of file, you want to open
+	 * @throws NullPointerException
+	 *             - if not given valid input
 	 */
 
-	public FileParser(String path, File ff) throws NullPointerException{
+	public FileParser(String path, File ff) throws NullPointerException {
 
 		if (path != null) {
 			f = new File(path);
 			readFile(f);
-		}
-		else {
-			if(ff != null){
+		} else {
+			if (ff != null) {
 				f = ff;
 				readFile(f);
-			}
-			else
+			} else
 				throw new NullPointerException();
 		}
 
@@ -45,7 +45,7 @@ public class FileParser extends NetworkData {
 	 */
 	private void readFile(File file) {
 		int vrstev = 0;
-		
+
 		try {
 			BufferedReader bfrd = new BufferedReader(new FileReader(file));
 			String tmp;
@@ -134,10 +134,8 @@ public class FileParser extends NetworkData {
 
 				if (count1 == 8) {
 					spl = tmp.split("\\s+");
-					for (int i = 0; i < numOfInputs
-							+ layers[layers.length - 1]; i++) {
-						trainSet[i
-								+ count2
+					for (int i = 0; i < numOfInputs + layers[layers.length - 1]; i++) {
+						trainSet[i + count2
 								* (numOfInputs + layers[layers.length - 1])] = Double
 								.parseDouble(spl[i]);
 					}
@@ -172,10 +170,9 @@ public class FileParser extends NetworkData {
 
 			}// while
 			prevedDo1();
-			//printTestArr(this.trenovaci);
+			// printTestArr(this.trenovaci);
 
 			bfrd.close();
-		
 
 		} catch (Exception e) {
 			// Nacita se dobre. A basta!
@@ -220,6 +217,17 @@ public class FileParser extends NetworkData {
 
 		}// for
 
+	}
+
+	public void inputsTo1(double input[]) {
+		// Prevod testovacich na interval <0 - 1>
+		int cc = 0;
+		for (int j = 0; j < numOfInputs; j++) {
+			input[j] -= popisVstupu[cc];
+			input[j] /= Math.abs(popisVstupu[cc] + popisVstupu[cc + 1]);
+			cc += 2;
+
+		}
 	}
 
 }

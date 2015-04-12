@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
 
 public class GUI extends JPanel {
 
@@ -31,16 +33,19 @@ public class GUI extends JPanel {
 	private JTextField prevStepC;
 	private JTextField layersN;
 	private JTextField testData;
+	private JTextField expErr;
 
 	private JLabel learningCA;
 	private JLabel prevStepCA;
 	private JLabel layersNA;
 	private JLabel testDataA;
+	private JLabel expErrA;
 
 	private JButton bLe;
 	private JButton bP;
 	private JButton bLa;
 	private JButton bT;
+	private JButton bCh;
 
 	// Backpropagation-------------
 	private Backpropagation bp;
@@ -73,8 +78,15 @@ public class GUI extends JPanel {
 					while (true) {
 						if (!queue.isEmpty()) {
 							tmp = queue.remove(0);
-							if (tmp.equals("EOF"))
-								break;
+							if (tmp.equals("EOF")) {
+								String s[] = bp.testFileData();
+								for (String a : s) {
+									jt.append(a);
+									jt.setCaretPosition(jt.getDocument()
+											.getLength());
+								}
+								return;
+							}
 							jt.append(tmp);
 							jt.setCaretPosition(jt.getDocument().getLength());
 						}
@@ -151,7 +163,7 @@ public class GUI extends JPanel {
 		jt.setEditable(false);
 		scroll = new JScrollPane(jt);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scroll.setBounds(10, 310, fWidth - 25, 150);
+		scroll.setBounds(10, 260, fWidth - 25, 200);
 		scroll.setAutoscrolls(true);
 		this.add(scroll);
 		scroll.repaint();
@@ -178,15 +190,21 @@ public class GUI extends JPanel {
 		layersN.setBounds(a, b, c, d);
 		layersN.setVisible(true);
 		b += e;
+		expErr = new JTextField("(0-1)%");
+		expErr.setBounds(a, b, c, d);
+		expErr.setVisible(true);
+		b += e;
 		testData = new JTextField("separate with sapce");
 		testData.setBounds(a, b, c, d);
 		testData.setVisible(true);
+
 		// this.repaint();
 		b += e;
 		this.add(learningC);
 		this.add(prevStepC);
 		this.add(layersN);
 		this.add(testData);
+		this.add(expErr);
 
 		// input description
 		c -= 40;
@@ -204,51 +222,150 @@ public class GUI extends JPanel {
 		layersNA.setBounds(a, b, c, d);
 		layersNA.setVisible(true);
 		b += e;
+		expErrA = new JLabel("Max Error(%)");
+		expErrA.setBounds(a, b, c, d);
+		expErrA.setVisible(true);
+		b += e;
 		testDataA = new JLabel("TestData");
 		testDataA.setBounds(a, b, c, d);
 		testDataA.setVisible(true);
+
 
 		this.add(learningCA);
 		this.add(prevStepCA);
 		this.add(layersNA);
 		this.add(testDataA);
+		this.add(expErrA);
 
 		a += f;
 		a += c + 50;
 		b = 10;
 		c = 70;
+		// learning coefficient
 		bLe = new JButton("Set");
 		bLe.setBounds(a, b, c, d);
 		bLe.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				// TODO
+				if (bp != null) {
+					try {
+						String[] input = learningC.getText().split("\\s+");
+						double val = Double.parseDouble(input[0]);
+						if (bp.setLearningC(val)) {
+							learningC.setText("UPDATED to: " + val);
+						} else {
+							learningC.setText("FAIL!, please try again");
+						}
+					} catch (NumberFormatException e) {
+						learningC.setText("FAIL!, please try again");
+					}
+				}
+				bLe.repaint();
 			}
 
 		});
 		b += e;
+		// previous step coefficient
 		bP = new JButton("Set");
 		bP.setBounds(a, b, c, d);
 		bP.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				// TODO
+				if (bp != null) {
+					try {
+						String[] input = prevStepC.getText().split("\\s+");
+						double val = Double.parseDouble(input[0]);
+						if (bp.setPrevStepC(val)) {
+							prevStepC.setText("UPDATED to: " + val);
+						} else {
+							prevStepC.setText("FAIL!, please try again");
+						}
+					} catch (NumberFormatException e) {
+						prevStepC.setText("FAIL!, please try again");
+					}
+				}
+				bP.repaint();
 			}
 
 		});
 		b += e;
+		// layers
 		bLa = new JButton("Set");
 		bLa.setBounds(a, b, c, d);
 		bLa.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				// TODO
+				if (bp != null) {
+					try {
+						String[] input = layersN.getText().split("\\s+");
+						int val[] = new int[input.length];
+						for (int i = 0; i < input.length; i++)
+							val[i] = Integer.parseInt(input[i]);
+						if (bp.setLayers(val)) {
+							layersN.setText("UPDATED to: "
+									+ Arrays.toString(val));
+						} else {
+							layersN.setText("FAIL!, please try again");
+						}
+					} catch (NumberFormatException e) {
+						layersN.setText("FAIL!, please try again");
+					}
+				}
+				bLa.repaint();
 			}
 
 		});
+		
 		b += e;
+		// expected error
+		bCh = new JButton("Set");
+		bCh.setBounds(a, b, c, d);
+		bCh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				if (bp != null) {
+					try {
+						String[] input = expErr.getText().split("\\s+");
+						double val = Double.parseDouble(input[0]);
+						if (bp.setMaxError(val)) {
+							expErr.setText("UPDATED to: " + val);
+						} else {
+							expErr.setText("FAIL!, please try again");
+						}
+					} catch (NumberFormatException e) {
+						expErr.setText("FAIL!, please try again");
+					}
+				}
+				bCh.repaint();
+			}
+
+		});
+		
+		b += e;
+		// test input
 		bT = new JButton("Test");
 		bT.setBounds(a, b, c, d);
 		bT.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				// TODO
+				if (bp != null) {
+					try {
+						String[] input = testData.getText().split("\\s+");
+						double val[] = new double[input.length];
+						for (int i = 0; i < input.length; i++)
+							val[i] = Double.parseDouble(input[i]);
+						if (bp.testInput(val)) {
+							testData.setText("input OK");
+							// display network response
+							double[] s = bp.testData(val);
+							jt.append("Input: " + Arrays.toString(val)
+									+ "\nOutput: " + Arrays.toString(s) + "\n");
+							jt.setCaretPosition(jt.getDocument().getLength());
+
+						} else {
+							testData.setText("FAIL!, please try again");
+						}
+
+					} catch (NumberFormatException e) {
+						testData.setText("FAIL!, please try again");
+					}
+				}
+				bT.repaint();
 			}
 
 		});
@@ -256,6 +373,7 @@ public class GUI extends JPanel {
 		this.add(bP);
 		this.add(bLa);
 		this.add(bT);
+		this.add(bCh);
 
 		this.repaint();
 
