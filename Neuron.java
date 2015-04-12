@@ -35,6 +35,15 @@ public class Neuron {
 	public double getOutput() {
 		return output;
 	}
+	
+
+	public void setLEARNING_C(double lEARNING_C) {
+		LEARNING_C = lEARNING_C;
+	}
+
+	public void setPREVIOUS_STEP_C(double pREVIOUS_STEP_C) {
+		PREVIOUS_STEP_C = pREVIOUS_STEP_C;
+	}
 
 	/**
 	 * 
@@ -52,9 +61,9 @@ public class Neuron {
 		this.PREVIOUS_STEP_C = PREVIOUS_STREP_C;
 
 		// need +1 array because of bias
-		weights = new double[numOfWeights + 1];
-		dW = new double[numOfWeights + 1];
-		oldDW = new double[numOfWeights + 1];
+		weights = new double[numOfWeights ];
+		dW = new double[numOfWeights ];
+		oldDW = new double[numOfWeights];
 		initWeights();
 	}
 
@@ -87,10 +96,10 @@ public class Neuron {
 	 */
 	public void midLayerExcitation(double vstupy[]) {
 		double sum = 0;
-		for (int i = 0; i < weights.length - 1; i++)
+		for (int i = 0; i < weights.length ; i++)
 			sum += weights[i] * vstupy[i];
 		// bias
-		sum += weights[weights.length - 1];
+		//sum += weights[weights.length - 1];
 		output = ( 1 / (1 + Math.exp(-sum)) );
 
 	}

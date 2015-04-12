@@ -1,44 +1,154 @@
+import java.io.File;
+import java.util.List;
 import java.util.Arrays;
 
-public class Backpropagation {
+public class Backpropagation implements Runnable{
 
-	private final int MAX_ITERATIONS = 10000000;
+	private final int MAX_ITERATIONS = 100000000;
 
-	// Num of neurons in each layer. Highest index is last layer
+	// Num of neurons in each layer. Highest index is hte last layer
 	private int layers[];
 	private Neuron neurons[];
 	private int numOfNeurons;
 	private int numOfInputs;
 	private double learningC;
 	// TODO - specify later
-	private double neco;
+	private double prevStepC;
 	// network Error
 	private double bpError;
+	private double maxError;
 
 	// TODO
 	private double testSet[];
 	private int testCount;
 	private double trainSet[];
 	private int trainCount;
+	
+	// for GUI
+	private static volatile boolean stop;
+	private final List<String> queue;
+	private boolean isRunning;
 
-	public Backpropagation() {
-		FileParser f = new FileParser("/home/batek/Stažené/lekar.txt", null);
+	
+	/**
+	 * 
+	 * @param file - file in given file format
+	 * @param q - synchronizedList - must be thread safe!
+	 */
+	public Backpropagation(File file, List<String> q) {
+		FileParser f = new FileParser(null, file);
+		queue = q;
+		isRunning = false;
 		initFromNetworkData(f);
+	}
+	
+	/**
+	 * 
+	 * @return true if network is learning
+	 */
+	public boolean isRunning(){
+		return this.isRunning;		
+	}
+	
+	@Override
+	public void run() {
 		runBackPropagation();
+		
+	}
+	
+	/**
+	 * 
+	 * @param val learning rate 
+	 * @return true if set
+	 */
+	public boolean setLearningC(double val){
+		if( val > 0.0d  ){
+			this.learningC = val;
+			return true;
+		}
+		return false;
+		
+	}
+	
+	/**
+	 * 
+	 * @param val previous step influence
+	 * @return true if set
+	 */
+	public boolean setPrevStepC(double val){
+		if( val > 0.0d  && val < 1.0d){
+			this.prevStepC = val;
+			return true;
+		}
+		return false;
+		
+	}
+	
+	/**
+	 * stop learning
+	 */
+	public void stopLearning(){
+		this.stop = true;
+	}
+	
+	public String[] testFileData(){
+		String tmp[] = new String[testCount];
+		double testInput[] = new double[numOfInputs];
+		int index = 0, index2 = numOfNeurons - layers[layers.length -1];
+		for(int i = 0 ; i < testCount ; i++){
+			for(int j = 0; j < numOfInputs ; j ++)
+				testInput[j] = testSet[index + j];
+			excitation(testInput);
+			for(int a = 0; a < numOfNeurons- index2; a++)
+				testInput[a] = neurons[index2 + a].getOutput();
+			tmp[i] = Arrays.toString(testInput);
+			index+= numOfInputs;
+		}
+		return tmp;
+	}
+	
+	public double[] testData(double input[]){
+		double d[] = new double[layers.length -1];
+		int index = numOfNeurons - layers[layers.length -1];
+		excitation(input);
+		for(int i = 0 ; i < d.length ; i++)
+			d[i] = neurons[index + i].getOutput();
+		return d;
+		
+	}
+	
+	/**
+	 * 
+	 * @param val array of network topology 
+	 * @return true, if input is used, otherwise flase
+	 */
+	public boolean setLayers( int val[]){
+		
+		if(layers != null && val.length > 1){
+			if(val[val.length-1] == layers[layers.length -1])
+			{
+				this.layers = val;
+				return true;
+			}
+		}
+
+		return false;
+		
 	}
 
 	public void runBackPropagation() {
 
 		// create network
 		createNeurons();
+		stop = false;
+		isRunning = true;
+		maxError = setMinErrorToStopLearning(0.2);
 		int outputsCount = layers[layers.length - 1];
 		double input[] = new double[numOfInputs];
 		double expectedOutput[] = new double[outputsCount];
 
 		int debug = 0;
 
-		System.out.println("MAX CHYBA:" + setMinErrorToStopLearning(0.1d)
-				+ " ----------- ");
 
 		while (debug < MAX_ITERATIONS) {
 			// if(debug == 1)break;
@@ -54,16 +164,18 @@ public class Backpropagation {
 				setBPError(expectedOutput);
 
 			}// for
-
-			bpError *= 0.5d;
-			// TODO - Calculate max acceptable error - something like 10% of
-			// sum(sum(ABS(expected - real)))
-			if (bpError <= 0.25d) {
+			if (bpError <= maxError || stop) {
+				queue.add("Finished! Error: " + bpError + " , iteration : " + debug +"\n");
+				//Tell gui thread that it stopped
+				queue.add("EOF");
+				isRunning = false;
 				return;
 			} else {
-				System.out.println("Error: " + bpError + ", iterace: "
-						+ debug++);
+				//GUI
+				if(debug % 100 == 0)
+					queue.add("Error: " + bpError + " , iteration : " + debug+"\n");
 				bpError = 0;
+				debug++;
 			}
 
 		}// loop
@@ -84,6 +196,7 @@ public class Backpropagation {
 			bpError += (neurons[index + i].getOutput() - expectedOut[i])
 					* (neurons[index + i].getOutput() - expectedOut[i]);
 		}
+		bpError /= 2;
 
 	}
 
@@ -222,7 +335,7 @@ public class Backpropagation {
 		trainSet = f.getTrainSet();
 		trainCount = f.getTrainCount();
 
-		neco = f.getFromLastC();
+		prevStepC = f.getFromLastC();
 
 	}
 
@@ -234,19 +347,20 @@ public class Backpropagation {
 			for (int i = 0; i < layers[j]; i++) {
 				if (j == (layers.length - 1)) {
 					neurons[index + i] = new Neuron(layers[j - 1], true,
-							learningC, neco);
+							learningC, prevStepC);
 				} else {
 					if (j == 0)
 						neurons[index + i] = new Neuron(numOfInputs, false,
-								learningC, neco);
+								learningC, prevStepC);
 					else
 						neurons[index + i] = new Neuron(layers[j - 1], false,
-								learningC, neco);
+								learningC, prevStepC);
 				}
 
 			}// for i
 			index += layers[j];
 		}// for j
 	}
+
 
 }
