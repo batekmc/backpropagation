@@ -1,3 +1,4 @@
+package batek;
 
 public class Main {
 	

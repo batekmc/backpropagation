@@ -1,3 +1,4 @@
+package batek;
 public abstract class NetworkData {
 
 	// Num of neurons in each layer. Highest index is last layer

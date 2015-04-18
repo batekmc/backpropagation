@@ -1,3 +1,4 @@
+package batek;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,7 +52,6 @@ public class Backpropagation implements Runnable {
 		queue = q;
 		isRunning = false;
 		initFromNetworkData(flp);
-
 	}
 
 	/**
@@ -68,7 +68,6 @@ public class Backpropagation implements Runnable {
 	@Override
 	public void run() {
 		runBackPropagation();
-
 	}
 
 	public boolean testInput(double[] input) {
@@ -123,87 +122,83 @@ public class Backpropagation implements Runnable {
 	public void stopLearning() {
 		this.stop = true;
 	}
-	
-	
-	public boolean saveNetwork(){
-		
+
+	public boolean saveNetwork() {
+
 		try {
-			if(neurons == null || layers == null)
+			if (neurons == null || layers == null)
 				return false;
-			PrintWriter writer = new PrintWriter("neuralNetworkT:" + System.nanoTime(), "UTF-8");
+			PrintWriter writer = new PrintWriter("neuralNetworkT:"
+					+ System.nanoTime(), "UTF-8");
 			String tmp = "";
-			for(int i = 0 ; i < layers.length ; i ++)
-				tmp+=layers[i] + " ";
+			for (int i = 0; i < layers.length; i++)
+				tmp += layers[i] + " ";
 			writer.println(tmp);
 			tmp = "";
-			for(int i = 0 ; i < neurons.length ; i ++){
-				for(int j = 0 ;j < neurons[i].getWeights().length ; j ++)
+			for (int i = 0; i < neurons.length; i++) {
+				for (int j = 0; j < neurons[i].getWeights().length; j++)
 					tmp += neurons[i].getWeights()[j] + " ";
 				writer.println(tmp);
-				tmp="";
+				tmp = "";
 			}
 			writer.close();
 			return true;
-			
+
 		} catch (FileNotFoundException e) {
-			// TODO - should not happend... ever...
+			// TODO - should not happened... ever...
 			e.printStackTrace();
 			return false;
 		} catch (UnsupportedEncodingException e) {
-			// TODO - 
+			// TODO - don't use stupid OS | editor...
 			e.printStackTrace();
 			return false;
 		}
 	}
-	
-	public boolean loadNetwork(File net){
-		
+
+	public boolean loadNetwork(File net) {
+
 		try {
 			BufferedReader bfrd = new BufferedReader(new FileReader(net));
 			String tmp;
 			String[] spl;
 			int count = 0;
 			double nWeights[];
-			while ((tmp = bfrd.readLine()) != null){
-				if(tmp.isEmpty())
+			while ((tmp = bfrd.readLine()) != null) {
+				if (tmp.isEmpty())
 					continue;
-				if(count == 0)
-				{
+				if (count == 0) {
 					spl = tmp.split("\\s+");
 					this.layers = new int[spl.length];
-					for( int i = 0 ; i < spl.length; i++){
-						layers[i] = Integer.parseInt(spl[i]);						
+					for (int i = 0; i < spl.length; i++) {
+						layers[i] = Integer.parseInt(spl[i]);
 					}
 					setNumOfNeurons();
 					count++;
-				}
-				else{
-					if(count == 1)
-					{
-						//create network with random weights
+				} else {
+					if (count == 1) {
+						// create network with random weights
 						createNeurons();
 					}
 					spl = tmp.split("\\s+");
 					nWeights = new double[spl.length];
-					for( int i = 0 ; i < spl.length; i++){
-						nWeights[i] = Double.parseDouble(spl[i]);						
+					for (int i = 0; i < spl.length; i++) {
+						nWeights[i] = Double.parseDouble(spl[i]);
 					}
-					if(count - 1 < neurons.length)
+					if (count - 1 < neurons.length)
 						neurons[count - 1].setWeights(nWeights);
-					else 
+					else
 						return false;
 					count++;
 				}
-		
-			}			
+
+			}
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
-		
+
 	}
-	
 
 	public String[] testFileData() {
 		String tmp[] = new String[testCount * 2];
@@ -223,11 +218,11 @@ public class Backpropagation implements Runnable {
 		return tmp;
 	}
 
-	
 	/**
 	 * Use network.
 	 * 
-	 * @param input input to network
+	 * @param input
+	 *            input to network
 	 * @return output from network to the input
 	 */
 	public double[] testData(double input[]) {
@@ -272,7 +267,7 @@ public class Backpropagation implements Runnable {
 		double input[] = new double[numOfInputs];
 		double expectedOutput[] = new double[outputsCount];
 
-		long  debug = 0;
+		long debug = 0;
 		bpError = 0;
 
 		while (true) {
@@ -291,16 +286,19 @@ public class Backpropagation implements Runnable {
 			}// for
 			bpError *= 0.5d;
 			if (bpError <= maxError || stop) {
-				queue.add("##Finished! Error: " + bpError + " , iteration : "
-						+ debug + "\n");
-				// Tell gui thread that it stopped
-				queue.add("EOF");
+				if (queue != null) {
+					queue.add("##Finished! Error: " + bpError
+							+ " , iteration : " + debug + "\n");
+					// Tell gui thread that it stopped
+					queue.add("EOF");
+				}
 				isRunning = false;
 				return;
 			} else {
 				// GUI
 				if (debug % 100 == 0)
-					queue.add("@Error: " + bpError + " , iteration : " + debug
+					if(queue != null)
+						queue.add("@Error: " + bpError + " , iteration : " + debug
 							+ "\n");
 				bpError = 0;
 				debug++;

@@ -1,3 +1,4 @@
+package batek;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,18 +38,24 @@ public class GUI extends JPanel {
 	private JTextField layersN;
 	private JTextField testData;
 	private JTextField expErr;
+	
+	private JTextField connectTF;
 
 	private JLabel learningCA;
 	private JLabel prevStepCA;
 	private JLabel layersNA;
 	private JLabel testDataA;
 	private JLabel expErrA;
+	
+	private JLabel connectL;
 
 	private JButton bLe;
 	private JButton bP;
 	private JButton bLa;
 	private JButton bT;
 	private JButton bCh;
+	
+	private JButton bConnect;
 
 	// Backpropagation-------------
 	private Backpropagation bp;
@@ -203,12 +210,31 @@ public class GUI extends JPanel {
 		});
 		this.add(bLoad);
 		
+		buttonYpos += 45;
+		// connect to server
+		bConnect = new JButton("GO!");
+		bConnect.setBounds(buttonXpos, buttonYpos, 130, 35);
+
+		// connect
+		bConnect.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				JFileChooser fileChooser = new JFileChooser();
+				int returnValue = fileChooser.showOpenDialog(null);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+					//TODO
+				}
+			}
+		});
+		this.add(bConnect);
+		
+		
+		
 		// Text Area
 		jt = new JTextArea();
 		jt.setEditable(false);
 		scroll = new JScrollPane(jt);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scroll.setBounds(10, 260, fWidth - 25, 200);
+		scroll.setBounds(10, 280, fWidth - 25, 180);
 		scroll.setAutoscrolls(true);
 		this.add(scroll);
 		scroll.repaint();
@@ -242,6 +268,10 @@ public class GUI extends JPanel {
 		testData = new JTextField("separate with sapce");
 		testData.setBounds(a, b, c, d);
 		testData.setVisible(true);
+		b += e;
+		connectTF = new JTextField("url port name car");
+		connectTF.setBounds(a, b, c + 100, d);
+		connectTF.setVisible(true);
 
 		// this.repaint();
 		b += e;
@@ -250,6 +280,7 @@ public class GUI extends JPanel {
 		this.add(layersN);
 		this.add(testData);
 		this.add(expErr);
+		this.add(connectTF);
 
 		// input description
 		c -= 40;
@@ -274,12 +305,17 @@ public class GUI extends JPanel {
 		testDataA = new JLabel("TestData");
 		testDataA.setBounds(a, b, c, d);
 		testDataA.setVisible(true);
+		b += e;
+		connectL = new JLabel("Server");
+		connectL.setBounds(a, b, c, d);
+		connectL.setVisible(true);
 
 		this.add(learningCA);
 		this.add(prevStepCA);
 		this.add(layersNA);
 		this.add(testDataA);
 		this.add(expErrA);
+		this.add(connectL);
 
 		a += f;
 		a += c + 50;
