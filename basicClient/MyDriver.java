@@ -9,7 +9,7 @@ public class MyDriver implements DriverInterface{
 	Backpropagation bp;
 	double res[];
 	double input[];
-	Double tmpInput[];
+	Float tmpInput[];
 	private boolean setInputSize;
 	HashMap<String, Float> mMap;
 		
@@ -34,13 +34,13 @@ public class MyDriver implements DriverInterface{
 			setInputSize = false;
 		}
 		mMap.clear();
-		tmpInput = values.values().toArray(new Double[values.size()]);
+		tmpInput = values.values().toArray(new Float[values.size()]);
 		for(int i = 0 ; i < tmpInput.length ; i ++)
 			input[i] = tmpInput[i].doubleValue();
-		res = this.bp.testData(input);
-		mMap.put("wheel", (float) res[0]);
-		mMap.put("acc", (float) res[1]);
-		
+		res = this.bp.carServerOutput(input);
+		mMap.put("wheel", (float) res[1]);
+		mMap.put("acc", (float) res[0]);
+		System.out.println(mMap.toString());
 		return mMap;
 		
 	}

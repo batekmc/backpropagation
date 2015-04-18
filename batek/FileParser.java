@@ -37,6 +37,13 @@ public class FileParser extends NetworkData {
 		}
 
 	}
+	
+	/**
+	 * E
+	 */
+	public FileParser() {
+	}
+
 
 	/**
 	 * Fce nacte informace ze souboru a predeved hodnoty do definovaneho formatu

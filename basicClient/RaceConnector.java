@@ -67,30 +67,37 @@ public class RaceConnector {
 	 * @throws java.lang.IOException  problem s pripojenim
 	 */
 	public void start(String raceName, String driverName, String carType) throws IOException  {
-		// pripojeni k serveru
-		socket = new Socket(serverName, port);
-		out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+		
+		try {
+			// pripojeni k serveru
+			socket = new Socket(serverName, port);
+			out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
-		// pripojeni k zavodu
-		out.write("driver\n");                     // specifikace protokolu
-		out.write("race:" + raceName + "\n");      // nazev zavodu
-		out.write("driver:" + driverName + "\n");  // jmeno ridice
-		out.write("color:0000FF\n");               // barva auta
-		if(carType != null){
-			out.write("car:" + carType + "\n");  // jmeno ridice
-		}
-		out.write("\n");
-		out.flush();
+			// pripojeni k zavodu
+			out.write("driver\n");                     // specifikace protokolu
+			out.write("race:" + raceName + "\n");      // nazev zavodu
+			out.write("driver:" + driverName + "\n");  // jmeno ridice
+			out.write("color:0000FF\n");               // barva auta
+			if(carType != null){
+				out.write("car:" + carType + "\n");  // jmeno ridice
+			}
+			out.write("\n");
+			out.flush();
 
-		// precteni a kontrola dopovedi serveru
-		String line = in.readLine();
-		if (!line.equals("ok")) {
-			// pokud se pripojeni nepodari, je oznamena chyba a vyvolana vyjimka
-			System.err.println("Chyba: " + line);
-			throw new ConnectException(line);
+			// precteni a kontrola dopovedi serveru
+			String line = in.readLine();
+			if (!line.equals("ok")) {
+				// pokud se pripojeni nepodari, je oznamena chyba a vyvolana vyjimka
+				System.err.println("Chyba: " + line);
+				throw new ConnectException(line);
+			}
+			in.readLine();  // precteni prazdneho radku
+			
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		in.readLine();  // precteni prazdneho radku
+
 		run();
 	}
 
@@ -117,7 +124,7 @@ public class RaceConnector {
 			line = in.readLine();
 			while(line != null && !"".equals(line)){
 				raceList.add(line);
-				System.out.println(line);
+//				System.out.println(line);
 				line = in.readLine();
 			}
 			return raceList;
@@ -154,7 +161,7 @@ public class RaceConnector {
 			line = in.readLine();
 			while(line != null && !"".equals(line)){
 				carList.add(line);
-				System.out.println(line);
+//				System.out.println(line);
 				line = in.readLine();
 			}
 			return carList;

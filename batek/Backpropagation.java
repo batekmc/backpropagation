@@ -53,6 +53,17 @@ public class Backpropagation implements Runnable {
 		isRunning = false;
 		initFromNetworkData(flp);
 	}
+	
+	/**
+	 * For loading network from file
+	 */
+	public Backpropagation() {
+		queue = null;
+		isRunning = true;
+		flp = null;
+	}
+	
+	
 
 	/**
 	 * 
@@ -123,13 +134,12 @@ public class Backpropagation implements Runnable {
 		this.stop = true;
 	}
 
-	public boolean saveNetwork() {
+	public boolean saveNetwork(String fs) {
 
 		try {
 			if (neurons == null || layers == null)
 				return false;
-			PrintWriter writer = new PrintWriter("neuralNetworkT:"
-					+ System.nanoTime(), "UTF-8");
+			PrintWriter writer = new PrintWriter(fs, "UTF-8");
 			String tmp = "";
 			for (int i = 0; i < layers.length; i++)
 				tmp += layers[i] + " ";
@@ -227,6 +237,23 @@ public class Backpropagation implements Runnable {
 	 */
 	public double[] testData(double input[]) {
 		flp.inputsTo1(input);
+		double d[] = new double[layers[layers.length - 1]];
+		int index = numOfNeurons - layers[layers.length - 1];
+		excitation(input);
+		for (int i = 0; i < d.length; i++)
+			d[i] = neurons[index + i].getOutput();
+		return d;
+
+	}
+	
+	/**
+	 * Use network.
+	 * 
+	 * @param input
+	 *            input to network
+	 * @return output from network to the input
+	 */
+	public double[] carServerOutput(double input[]) {
 		double d[] = new double[layers[layers.length - 1]];
 		int index = numOfNeurons - layers[layers.length - 1];
 		excitation(input);

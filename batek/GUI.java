@@ -18,7 +18,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
+
+import basicClient.BasicClient;
 
 public class GUI extends JPanel {
 
@@ -177,9 +178,18 @@ public class GUI extends JPanel {
 		bSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
 				if(bp != null){
-					if( !bp.saveNetwork() ){
+	                JFileChooser saveFile = new JFileChooser();
+	                saveFile.showSaveDialog(null);
+	                File fs = saveFile.getSelectedFile();
+					
+					if( !bp.saveNetwork(fs.getAbsolutePath()) ){
 						JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
-					}	
+					}
+					else{
+						jt.append(fs.getName() + " - Saved");
+						jt.setCaretPosition(jt.getDocument()
+								.getLength());						
+					}
 				}
 				else
 					JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
@@ -199,12 +209,17 @@ public class GUI extends JPanel {
 				int returnValue = fileChooser.showOpenDialog(null);
 				if (returnValue == JFileChooser.APPROVE_OPTION) {
 					File ff = fileChooser.getSelectedFile();
-					if(bp != null){
+					if(bp == null)
+						bp = new Backpropagation();
+					
 						if(!bp.loadNetwork(ff))
 							JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
-					}
-					else
-						JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
+						else{
+							jt.append(ff.getName() + " - Loaded");
+							jt.setCaretPosition(jt.getDocument()
+									.getLength());
+						}
+							
 				}
 			}
 		});
@@ -218,10 +233,24 @@ public class GUI extends JPanel {
 		// connect
 		bConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				JFileChooser fileChooser = new JFileChooser();
-				int returnValue = fileChooser.showOpenDialog(null);
-				if (returnValue == JFileChooser.APPROVE_OPTION) {
-					//TODO
+				String spl[] = connectTF.getText().split("\\s+");
+				if(spl.length < 5)
+				{
+					connectTF.setText("INVALID input");
+					connectTF.repaint();
+					return;
+				}
+				try {
+					int port = Integer.parseInt(spl[1]);
+					BasicClient bc = new BasicClient(spl[0], port, spl[2] , spl[3], spl[4], bp);
+					spl[0] = bc.connect();
+					connectTF.setText(spl[0]);
+					connectTF.repaint();
+					
+				} catch (Exception e) {
+					connectTF.setText("INVALID input");
+					connectTF.repaint();
+					return;
 				}
 			}
 		});
@@ -269,7 +298,7 @@ public class GUI extends JPanel {
 		testData.setBounds(a, b, c, d);
 		testData.setVisible(true);
 		b += e;
-		connectTF = new JTextField("url port name car");
+		connectTF = new JTextField("localhost 9460 Zavod Batek Fabia");
 		connectTF.setBounds(a, b, c + 100, d);
 		connectTF.setVisible(true);
 
