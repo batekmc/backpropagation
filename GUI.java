@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -25,6 +26,8 @@ public class GUI extends JPanel {
 	private JButton b1;
 	private JButton bStop;
 	private JButton bStart;
+	private JButton bSave;
+	private JButton bLoad;
 	private JTextArea jt;
 	private JScrollPane scroll;
 
@@ -158,6 +161,48 @@ public class GUI extends JPanel {
 		});
 		this.add(bStop);
 
+		buttonYpos += 45;
+		// Save network
+		bSave = new JButton("Save");
+		bSave.setBounds(buttonXpos, buttonYpos, 130, 35);
+
+		// Save
+		bSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				if(bp != null){
+					if( !bp.saveNetwork() ){
+						JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
+					}	
+				}
+				else
+					JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
+			}
+		});
+		this.add(bSave);
+		
+		buttonYpos += 45;
+		// Save network
+		bLoad = new JButton("Load");
+		bLoad.setBounds(buttonXpos, buttonYpos, 130, 35);
+
+		// Choose training data file
+		bLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				JFileChooser fileChooser = new JFileChooser();
+				int returnValue = fileChooser.showOpenDialog(null);
+				if (returnValue == JFileChooser.APPROVE_OPTION) {
+					File ff = fileChooser.getSelectedFile();
+					if(bp != null){
+						if(!bp.loadNetwork(ff))
+							JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
+					}
+					else
+						JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
+				}
+			}
+		});
+		this.add(bLoad);
+		
 		// Text Area
 		jt = new JTextArea();
 		jt.setEditable(false);
@@ -229,7 +274,6 @@ public class GUI extends JPanel {
 		testDataA = new JLabel("TestData");
 		testDataA.setBounds(a, b, c, d);
 		testDataA.setVisible(true);
-
 
 		this.add(learningCA);
 		this.add(prevStepCA);
@@ -312,7 +356,7 @@ public class GUI extends JPanel {
 			}
 
 		});
-		
+
 		b += e;
 		// expected error
 		bCh = new JButton("Set");
@@ -336,7 +380,7 @@ public class GUI extends JPanel {
 			}
 
 		});
-		
+
 		b += e;
 		// test input
 		bT = new JButton("Test");

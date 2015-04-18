@@ -1,4 +1,12 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.sql.Date;
 import java.util.List;
 import java.util.Arrays;
 
@@ -70,9 +78,9 @@ public class Backpropagation implements Runnable {
 	}
 
 	public boolean setMaxError(double val) {
-		usrErr = true;
 		if (val > 0.0d && val < setMinErrorToStopLearning(1.0d)) {
 			bpError = val;
+			usrErr = true;
 			return true;
 		}
 
@@ -101,7 +109,7 @@ public class Backpropagation implements Runnable {
 	 * @return true if set
 	 */
 	public boolean setPrevStepC(double val) {
-		if (val > 0.0d && val < 1.0d) {
+		if (val >= 0.0d && val < 1.0d) {
 			this.prevStepC = val;
 			return true;
 		}
@@ -115,6 +123,87 @@ public class Backpropagation implements Runnable {
 	public void stopLearning() {
 		this.stop = true;
 	}
+	
+	
+	public boolean saveNetwork(){
+		
+		try {
+			if(neurons == null || layers == null)
+				return false;
+			PrintWriter writer = new PrintWriter("neuralNetworkT:" + System.nanoTime(), "UTF-8");
+			String tmp = "";
+			for(int i = 0 ; i < layers.length ; i ++)
+				tmp+=layers[i] + " ";
+			writer.println(tmp);
+			tmp = "";
+			for(int i = 0 ; i < neurons.length ; i ++){
+				for(int j = 0 ;j < neurons[i].getWeights().length ; j ++)
+					tmp += neurons[i].getWeights()[j] + " ";
+				writer.println(tmp);
+				tmp="";
+			}
+			writer.close();
+			return true;
+			
+		} catch (FileNotFoundException e) {
+			// TODO - should not happend... ever...
+			e.printStackTrace();
+			return false;
+		} catch (UnsupportedEncodingException e) {
+			// TODO - 
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean loadNetwork(File net){
+		
+		try {
+			BufferedReader bfrd = new BufferedReader(new FileReader(net));
+			String tmp;
+			String[] spl;
+			int count = 0;
+			double nWeights[];
+			while ((tmp = bfrd.readLine()) != null){
+				if(tmp.isEmpty())
+					continue;
+				if(count == 0)
+				{
+					spl = tmp.split("\\s+");
+					this.layers = new int[spl.length];
+					for( int i = 0 ; i < spl.length; i++){
+						layers[i] = Integer.parseInt(spl[i]);						
+					}
+					setNumOfNeurons();
+					count++;
+				}
+				else{
+					if(count == 1)
+					{
+						//create network with random weights
+						createNeurons();
+					}
+					spl = tmp.split("\\s+");
+					nWeights = new double[spl.length];
+					for( int i = 0 ; i < spl.length; i++){
+						nWeights[i] = Double.parseDouble(spl[i]);						
+					}
+					if(count - 1 < neurons.length)
+						neurons[count - 1].setWeights(nWeights);
+					else 
+						return false;
+					count++;
+				}
+		
+			}			
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+	}
+	
 
 	public String[] testFileData() {
 		String tmp[] = new String[testCount * 2];
@@ -134,6 +223,13 @@ public class Backpropagation implements Runnable {
 		return tmp;
 	}
 
+	
+	/**
+	 * Use network.
+	 * 
+	 * @param input input to network
+	 * @return output from network to the input
+	 */
 	public double[] testData(double input[]) {
 		flp.inputsTo1(input);
 		double d[] = new double[layers[layers.length - 1]];
@@ -171,12 +267,13 @@ public class Backpropagation implements Runnable {
 		stop = false;
 		isRunning = true;
 		if (!usrErr)
-			maxError = setMinErrorToStopLearning(0.2);
+			maxError = setMinErrorToStopLearning(0.1);
 		int outputsCount = layers[layers.length - 1];
 		double input[] = new double[numOfInputs];
 		double expectedOutput[] = new double[outputsCount];
 
 		long  debug = 0;
+		bpError = 0;
 
 		while (true) {
 			// if(debug == 1)break;
@@ -192,6 +289,7 @@ public class Backpropagation implements Runnable {
 				setBPError(expectedOutput);
 
 			}// for
+			bpError *= 0.5d;
 			if (bpError <= maxError || stop) {
 				queue.add("##Finished! Error: " + bpError + " , iteration : "
 						+ debug + "\n");
@@ -226,8 +324,6 @@ public class Backpropagation implements Runnable {
 			bpError += (neurons[index + i].getOutput() - expectedOut[i])
 					* (neurons[index + i].getOutput() - expectedOut[i]);
 		}
-		bpError /= 2;
-
 	}
 
 	/**

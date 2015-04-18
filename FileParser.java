@@ -124,6 +124,7 @@ public class FileParser extends NetworkData {
 					continue;
 				}
 
+				//
 				if (count1 == 7) {
 					trainCount = Integer.parseInt(tmp);
 					trainSet = new double[trainCount

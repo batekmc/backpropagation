@@ -5,7 +5,7 @@ public class Neuron {
 	private double weights[];
 	// private double vstupy[];
 	private boolean outputLayer;
-	private final double lambda = -1.0d;
+	//private final double lambda = -1.0d;
 
 	private double output;
 	private double delta;
@@ -26,6 +26,10 @@ public class Neuron {
 
 	public double[] getWeights() {
 		return weights;
+	}
+	
+	public void setWeights(double []nW) {
+		System.arraycopy(nW, 0, weights, 0, weights.length);
 	}
 
 	public boolean isOutputLayer() {
