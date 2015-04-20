@@ -186,7 +186,7 @@ public class GUI extends JPanel {
 						JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
 					}
 					else{
-						jt.append(fs.getName() + " - Saved");
+						jt.append(fs.getName() + " - Saved\n");
 						jt.setCaretPosition(jt.getDocument()
 								.getLength());						
 					}
@@ -215,7 +215,7 @@ public class GUI extends JPanel {
 						if(!bp.loadNetwork(ff))
 							JOptionPane.showMessageDialog(f, "My Goodness, FAIL!");
 						else{
-							jt.append(ff.getName() + " - Loaded");
+							jt.append(ff.getName() + " - Loaded\n");
 							jt.setCaretPosition(jt.getDocument()
 									.getLength());
 						}
@@ -244,8 +244,9 @@ public class GUI extends JPanel {
 					int port = Integer.parseInt(spl[1]);
 					BasicClient bc = new BasicClient(spl[0], port, spl[2] , spl[3], spl[4], bp);
 					spl[0] = bc.connect();
-					connectTF.setText(spl[0]);
-					connectTF.repaint();
+					jt.append(spl[0] + "\n");
+					jt.setCaretPosition(jt.getDocument()
+							.getLength());
 					
 				} catch (Exception e) {
 					connectTF.setText("INVALID input");
