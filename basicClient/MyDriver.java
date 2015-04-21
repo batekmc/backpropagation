@@ -33,7 +33,7 @@ public class MyDriver implements DriverInterface {
 	public HashMap<String, Float> drive(HashMap<String, Float> values) {
 		if (bp == null)
 			return null;
-
+		//in order as it is in learning 
 		input[0] = values.getOrDefault("angle", 0.0f);
 		input[1] = values.getOrDefault("speed", 0.0f);
 		input[2] = values.getOrDefault("distance0", 0.0f);
@@ -67,7 +67,7 @@ public class MyDriver implements DriverInterface {
 		res = this.bp.carServerOutput(input);
 		mMap.put("wheel", (float) res[0]);
 		mMap.put("acc", (float) res[1]);
-		System.out.println(mMap.toString());
+		//System.out.println(mMap.toString());
 		return mMap;
 	}
 
