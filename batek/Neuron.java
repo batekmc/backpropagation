@@ -80,11 +80,10 @@ public class Neuron {
 	public void setdW(double W[]) {
 		for (int i = 0; i < W.length; i++)
 			this.dW[i] = LEARNING_C * W[i] * delta;
-		this.dW[dW.length - 1] = LEARNING_C * delta;
 	}
 
 	/**
-	 * init weight randomly in interval <-1,1>
+	 * init weight randomly in interval <0,1>
 	 */
 	private void initWeights() {
 		Random r = new Random();
@@ -103,8 +102,6 @@ public class Neuron {
 		double sum = 0;
 		for (int i = 0; i < weights.length ; i++)
 			sum += weights[i] * vstupy[i];
-		// bias
-		//sum += weights[weights.length - 1];
 		output = ( 1 / (1 + Math.exp(-sum)) );
 
 	}
@@ -125,7 +122,6 @@ public class Neuron {
 		}
 		if(PREVIOUS_STEP_C != 0.0d)
 			System.arraycopy(dW, 0, oldDW, 0, dW.length);
-		//oldDW = dW;
 	}
 
 }// class

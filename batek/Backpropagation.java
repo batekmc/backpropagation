@@ -1,4 +1,5 @@
 package batek;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -53,7 +54,7 @@ public class Backpropagation implements Runnable {
 		isRunning = false;
 		initFromNetworkData(flp);
 	}
-	
+
 	/**
 	 * For loading network from file
 	 */
@@ -62,8 +63,6 @@ public class Backpropagation implements Runnable {
 		isRunning = true;
 		flp = null;
 	}
-	
-	
 
 	/**
 	 * 
@@ -245,7 +244,7 @@ public class Backpropagation implements Runnable {
 		return d;
 
 	}
-	
+
 	/**
 	 * Use network.
 	 * 
@@ -298,7 +297,7 @@ public class Backpropagation implements Runnable {
 		bpError = 0;
 
 		while (true) {
-			// if(debug == 1)break;
+			// if(debug == 10)break;
 			for (int i = 0; i < trainCount; i++) {
 
 				System.arraycopy(trainSet, i * (outputsCount + numOfInputs),
@@ -309,6 +308,10 @@ public class Backpropagation implements Runnable {
 				learning(expectedOutput, input);
 
 				setBPError(expectedOutput);
+				// System.out.println("#I:" + i);
+				// System.out.println("#input" + Arrays.toString(input));
+				// System.out.println("#output" +
+				// Arrays.toString(expectedOutput));
 
 			}// for
 			bpError *= 0.5d;
@@ -321,15 +324,14 @@ public class Backpropagation implements Runnable {
 				}
 				isRunning = false;
 				return;
-			} else {
-				// GUI
-				if (debug % 100 == 0)
-					if(queue != null)
-						queue.add("@Error: " + bpError + " , iteration : " + debug
-							+ "\n");
-				bpError = 0;
-				debug++;
 			}
+			// GUI
+			if (debug % 100 == 0)
+				if (queue != null)
+					queue.add("@Error: " + bpError + " , iteration : " + debug
+							+ "\n");
+			bpError = 0;
+			debug++;
 
 		}// loop
 	}
@@ -371,18 +373,20 @@ public class Backpropagation implements Runnable {
 	 *            output of each neuron is saved in Neuron.output
 	 */
 	private void excitation(double input[]) {
+		double input2[] = new double[input.length];
+		System.arraycopy(input, 0, input2, 0, input2.length);
 
 		int index = 0, index2 = 0;
 		for (int j = 0; j < layers.length; j++) {
 			for (int i = 0; i < layers[j]; i++) {
 				if (i == 0 && j > 0) {
 					// get output calculated by neurons of lower layer
-					input = new double[layers[j - 1]];
+					input2 = new double[layers[j - 1]];
 					for (int k = 0; k < layers[j - 1]; k++)
-						input[k] = neurons[index2 + k].getOutput();
+						input2[k] = neurons[index2 + k].getOutput();
 					index2 += layers[j - 1];
 				}
-				neurons[index + i].midLayerExcitation(input);
+				neurons[index + i].midLayerExcitation(input2);
 			}
 			index += layers[j];
 		}// for
@@ -429,8 +433,8 @@ public class Backpropagation implements Runnable {
 
 					// get sum of delta*w from neurons of higher layer
 					for (int a = 0; a < layers[j + 1]; a++)
-						tmpSum += neurons[index2 + a].getDelta()
-								* neurons[index2 + a].getWeights()[i];
+						tmpSum += (neurons[index2 + a].getDelta()
+								* neurons[index2 + a].getWeights()[i]);
 					delta = tmp * (1 - tmp) * (tmpSum);
 					neurons[index + i].setDelta(delta);
 
